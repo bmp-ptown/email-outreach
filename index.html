@@ -4,15 +4,21 @@
     <meta charset="UTF-8">
     <title>Insperity Email Generator</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
-        .container { max-width: 900px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background-color: #0056b3; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: #002b49; }
+        label { font-weight: 600; display: block; margin-top: 15px; color: #444; }
+        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { background-color: #0056b3; color: white; padding: 14px 20px; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; font-weight: 600; transition: background 0.2s; }
         button:hover { background-color: #004085; }
         #resultArea { margin-top: 30px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; vertical-align: top; }
-        th { background-color: #f2f2f2; }
+        
+        /* Clean professional table styling */
+        .email-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        .email-table th, .email-table td { border: 1px solid #e1e4e8; padding: 14px; text-align: left; vertical-align: top; }
+        .email-table th { background-color: #f1f4f8; color: #1f2328; font-weight: 700; }
+        .email-table tr:nth-child(even) { background-color: #f8fafc; }
+        .loading { text-align: center; font-style: italic; color: #666; padding: 20px; }
     </style>
 </head>
 <body>
@@ -41,14 +47,13 @@ async function generateSequence() {
         return;
     }
 
-    document.getElementById('resultArea').innerHTML = "<p><em>Generating sequences, please wait...</em></p>";
+    const resultDiv = document.getElementById('resultArea');
+    resultDiv.innerHTML = '<div class="loading">Generating optimized sequences, please wait...</div>';
 
     try {
         const response = await fetch('https://email-outreach-api-36233880590.us-west1.run.app', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 company_name: companyName, 
                 contact_name: contactName 
@@ -59,21 +64,21 @@ async function generateSequence() {
         
         if (!response.ok) {
             alert("Error: " + (data.error || "Unknown error"));
-            document.getElementById('resultArea').innerHTML = "";
+            resultDiv.innerHTML = "";
             return;
         }
 
         const csvText = data.output;
         if (!csvText) {
             alert("Received empty output from server.");
-            document.getElementById('resultArea').innerHTML = "";
+            resultDiv.innerHTML = "";
             return;
         }
 
-        // Render CSV data into a clean HTML preview table with line breaks
+        // Parse CSV and render a clean, readable HTML table
         function renderCsvAsTable(csv) {
             const lines = csv.split('\n').filter(l => l.trim() !== '');
-            let html = '<table>';
+            let html = '<table class="email-table">';
             
             lines.forEach((line, index) => {
                 html += '<tr>';
@@ -81,7 +86,7 @@ async function generateSequence() {
                 
                 cols.forEach(col => {
                     let cleanCol = col.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-                    cleanCol = cleanCol.replace(/\n/g, '<br>'); // Render real newlines visually
+                    cleanCol = cleanCol.replace(/\n/g, '<br>'); // Clean line breaks
                     
                     const tag = index === 0 ? 'th' : 'td';
                     html += `<${tag}>${cleanCol}</${tag}>`;
@@ -92,11 +97,11 @@ async function generateSequence() {
             return html;
         }
 
-        document.getElementById('resultArea').innerHTML = renderCsvAsTable(csvText);
+        resultDiv.innerHTML = renderCsvAsTable(csvText);
 
     } catch (err) {
         alert("Network error: " + err.message);
-        document.getElementById('resultArea').innerHTML = "";
+        resultDiv.innerHTML = "";
     }
 }
 </script>
