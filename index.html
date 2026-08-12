@@ -294,8 +294,9 @@
             if (data.error) {
                 alert('API Error: ' + data.error);
             } else {
-                // Render the output HTML table returned by the agent
-                tableContainer.innerHTML = data.output;
+                // Convert [BR] to actual HTML line breaks before rendering
+                let cleanOutput = data.output.replace(/\[BR\]/g, '<br><br>');
+                tableContainer.innerHTML = cleanOutput;
                 resultsSection.style.display = 'block';
             }
         } catch (err) {
