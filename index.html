@@ -293,11 +293,16 @@
 
             if (data.error) {
                 alert('API Error: ' + data.error);
-            } else {
-                // Convert [BR] to actual HTML line breaks before rendering
-                let cleanOutput = data.output.replace(/\[BR\]/g, '<br><br>');
+           } else {
+                // Print the raw data to the browser console so we can see the exact formatting
+                console.log("RAW AGENT DATA:", data);
+                
+                let rawText = data.output || "";
+                let cleanOutput = String(rawText).replace(/\[BR\]/gi, '<br><br>');
+                
                 tableContainer.innerHTML = cleanOutput;
                 resultsSection.style.display = 'block';
+            }
             }
         } catch (err) {
             alert('Request failed: ' + err.message);
