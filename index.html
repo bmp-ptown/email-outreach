@@ -2,108 +2,330 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Insperity Email Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outreach Sequence Generator</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; color: #002b49; }
-        label { font-weight: 600; display: block; margin-top: 15px; color: #444; }
-        input { width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        button { background-color: #0056b3; color: white; padding: 14px 20px; border: none; border-radius: 6px; cursor: pointer; width: 100%; font-size: 16px; font-weight: 600; transition: background 0.2s; }
-        button:hover { background-color: #004085; }
-        #resultArea { margin-top: 30px; overflow-x: auto; }
-        
-        /* Clean professional table styling */
-        .email-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        .email-table th, .email-table td { border: 1px solid #e1e4e8; padding: 14px; text-align: left; vertical-align: top; }
-        .email-table th { background-color: #f1f4f8; color: #1f2328; font-weight: 700; }
-        .email-table tr:nth-child(even) { background-color: #f8fafc; }
-        .loading { text-align: center; font-style: italic; color: #666; padding: 20px; }
+        :root {
+            --primary-navy: #002b49;
+            --accent-blue: #0072ce;
+            --hover-blue: #005aa3;
+            --success-green: #28a745;
+            --success-hover: #218838;
+            --bg-gray: #f4f7f9;
+            --card-border: #e1e8ed;
+            --text-dark: #2c3e50;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 960px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--card-border);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: var(--primary-navy);
+            color: #ffffff;
+            padding: 28px 36px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .header p {
+            margin: 6px 0 0 0;
+            font-size: 14px;
+            color: #b0c4de;
+        }
+
+        .content {
+            padding: 36px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary-navy);
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(0, 114, 206, 0.15);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--hover-blue);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.99);
+        }
+
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .loading-state {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin-top: 24px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-state p {
+            margin: 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .results-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: var(--primary-navy);
+        }
+
+        .btn-copy {
+            background-color: var(--success-green);
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-copy:hover {
+            background-color: var(--success-hover);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            background: #ffffff;
+            max-height: 400px;
+        }
+
+        /* Styling for the agent's rendered HTML table */
+        .table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .table-wrapper th {
+            background-color: #f1f5f9;
+            color: var(--primary-navy);
+            padding: 12px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--card-border);
+            white-space: nowrap;
+        }
+
+        .table-wrapper td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            min-width: 150px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Insperity Email Sequence Generator</h2>
-    
-    <label for="companyNameInput">Target Company Name:</label>
-    <input type="text" id="companyNameInput" placeholder="e.g. Acme Corp">
+<div class="app-container">
+    <div class="header">
+        <h1>Sales Outreach Generator</h1>
+        <p>Enter prospect details to generate a customized 4-email sequence ready for your spreadsheet.</p>
+    </div>
 
-    <label for="contactNameInput">Contact Name (Optional):</label>
-    <input type="text" id="contactNameInput" placeholder="e.g. John">
+    <div class="content">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="company">Company Name *</label>
+                <input type="text" id="company" placeholder="e.g. Cloudflare" required>
+            </div>
+            <div class="form-group">
+                <label for="contact">Contact Name</label>
+                <input type="text" id="contact" placeholder="e.g. Sarah Jenkins">
+            </div>
+        </div>
 
-    <button onclick="generateSequence()">Generate Sequences</button>
+        <button id="generate-btn" class="btn-primary" onclick="generateSequence()">Generate 4-Email Sequence</button>
 
-    <div id="resultArea"></div>
+        <div id="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Researching recent company developments and assembling sequence... (~15 seconds)</p>
+        </div>
+
+        <div id="results" class="results-section">
+            <div class="results-header">
+                <h3>Generated Output</h3>
+                <button class="btn-copy" onclick="copyTable()">Copy Row for Spreadsheet</button>
+            </div>
+            <div id="table-container" class="table-wrapper"></div>
+        </div>
+    </div>
 </div>
 
 <script>
-async function generateSequence() {
-    const companyName = document.getElementById('companyNameInput').value.trim();
-    const contactName = document.getElementById('contactNameInput').value.trim();
+    // REPLACE THIS WITH YOUR DEPLOYED CLOUD FUNCTION TRIGGER URL
+    const CLOUD_FUNCTION_URL = "https://email-outreach-api-36233880590.us-west1.run.app";
 
-    if (!companyName) {
-        alert("Please enter a target company name.");
-        return;
-    }
+    async function generateSequence() {
+        const companyInput = document.getElementById('company').value.trim();
+        const contactInput = document.getElementById('contact').value.trim();
+        const generateBtn = document.getElementById('generate-btn');
+        const loadingState = document.getElementById('loading');
+        const resultsSection = document.getElementById('results');
+        const tableContainer = document.getElementById('table-container');
 
-    const resultDiv = document.getElementById('resultArea');
-    resultDiv.innerHTML = '<div class="loading">Generating optimized sequences, please wait...</div>';
-
-    try {
-        const response = await fetch('https://email-outreach-api-36233880590.us-west1.run.app', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                company_name: companyName, 
-                contact_name: contactName 
-            })
-        });
-
-        const data = await response.json();
-        
-        if (!response.ok) {
-            alert("Error: " + (data.error || "Unknown error"));
-            resultDiv.innerHTML = "";
+        if (!companyInput) {
+            alert('Please enter a target company name.');
             return;
         }
 
-        const csvText = data.output;
-        if (!csvText) {
-            alert("Received empty output from server.");
-            resultDiv.innerHTML = "";
-            return;
-        }
+        // Update UI state
+        generateBtn.disabled = true;
+        loadingState.style.display = 'block';
+        resultsSection.style.display = 'none';
 
-        // Parse CSV and render a clean, readable HTML table
-        function renderCsvAsTable(csv) {
-            const lines = csv.split('\n').filter(l => l.trim() !== '');
-            let html = '<table class="email-table">';
-            
-            lines.forEach((line, index) => {
-                html += '<tr>';
-                const cols = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [line];
-                
-                cols.forEach(col => {
-                    let cleanCol = col.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-                    cleanCol = cleanCol.replace(/\n/g, '<br>'); // Clean line breaks
-                    
-                    const tag = index === 0 ? 'th' : 'td';
-                    html += `<${tag}>${cleanCol}</${tag}>`;
-                });
-                html += '</tr>';
+        try {
+            const response = await fetch(CLOUD_FUNCTION_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    company_name: companyInput, 
+                    contact_name: contactInput 
+                })
             });
-            html += '</table>';
-            return html;
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert('API Error: ' + data.error);
+            } else {
+                // Render the output HTML table returned by the agent
+                tableContainer.innerHTML = data.output;
+                resultsSection.style.display = 'block';
+            }
+        } catch (err) {
+            alert('Request failed: ' + err.message);
+        } finally {
+            generateBtn.disabled = false;
+            loadingState.style.display = 'none';
+        }
+    }
+
+    function copyTable() {
+        const table = document.querySelector('#table-container table');
+        if (!table) {
+            alert('No table found to copy.');
+            return;
         }
 
-        resultDiv.innerHTML = renderCsvAsTable(csvText);
+        const range = document.createRange();
+        range.selectNode(table);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
 
-    } catch (err) {
-        alert("Network error: " + err.message);
-        resultDiv.innerHTML = "";
+        try {
+            document.execCommand('copy');
+            alert('Row copied! Open Excel or Google Sheets and press Ctrl+V.');
+        } catch (err) {
+            alert('Copy failed. Please manually select the table rows and copy.');
+        }
+        window.getSelection().removeAllRanges();
     }
-}
 </script>
 
 </body>
