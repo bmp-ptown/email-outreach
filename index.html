@@ -334,8 +334,17 @@
             let rowData = [];
             
             for (let j = 0; j < row.cells.length; j++) {
-                // .innerText preserves the visual line breaks as standard \n characters
-                let cellText = row.cells[j].innerText; 
+                // Clone the cell so we can manipulate it without changing the screen
+                let cellClone = row.cells[j].cloneNode(true);
+                
+                // Swap HTML breaks for real newlines inside the clone
+                const brs = cellClone.querySelectorAll('br');
+                for (let br of brs) {
+                    br.replaceWith('\n');
+                }
+                
+                // Use textContent to completely ignore screen word-wrapping
+                let cellText = cellClone.textContent || ""; 
                 
                 // Excel rules: Escape existing quotes by doubling them
                 cellText = cellText.replace(/"/g, '""'); 
