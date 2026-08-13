@@ -296,14 +296,17 @@
             } else {
                 let rawText = data.output || data.text || data || "";
                 
-                // 1. Catch [BR], escaped HTML breaks, and literal newlines
+                // THE FIX: Use Microsoft's special CSS tag to force line breaks to stay inside the cell
+                const excelBreak = '<br style="mso-data-placement:same-cell;">';
+                
+                // Catch [BR], escaped HTML breaks, and literal newlines, replacing them with the Excel-safe break
                 let cleanOutput = String(rawText)
-                    .replace(/\[BR\]/gi, '<br><br>')
-                    .replace(/&lt;br\/?&gt;/gi, '<br>')
-                    .replace(/\\n/g, '<br>')
-                    .replace(/\n/g, '<br>');
+                    .replace(/\[BR\]/gi, excelBreak + excelBreak)
+                    .replace(/&lt;br\/?&gt;/gi, excelBreak)
+                    .replace(/\\n/g, excelBreak)
+                    .replace(/\n/g, excelBreak);
 
-                // 2. Chop off the weird 'thought_signature' python data at the end
+                // Chop off the weird 'thought_signature' python data at the end
                 if (cleanOutput.includes("</table>")) {
                     cleanOutput = cleanOutput.substring(0, cleanOutput.indexOf("</table>") + 8);
                 }
