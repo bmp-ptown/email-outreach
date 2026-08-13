@@ -293,7 +293,7 @@
 
             if (data.error) {
                 alert('API Error: ' + data.error);
-           } else {
+            } else {
                 // Print the raw data to the browser console so we can see the exact formatting
                 console.log("RAW AGENT DATA:", data);
                 
@@ -302,7 +302,6 @@
                 
                 tableContainer.innerHTML = cleanOutput;
                 resultsSection.style.display = 'block';
-            }
             }
         } catch (err) {
             alert('Request failed: ' + err.message);
@@ -333,6 +332,5 @@
         window.getSelection().removeAllRanges();
     }
 </script>
-
 </body>
 </html>
