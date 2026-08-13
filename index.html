@@ -293,7 +293,7 @@
 
             if (data.error) {
                 alert('API Error: ' + data.error);
-           } else {
+            } else {
                 let rawText = data.output || data.text || data || "";
                 
                 // 1. Catch [BR], escaped HTML breaks, and literal newlines
@@ -311,7 +311,14 @@
                 tableContainer.innerHTML = cleanOutput;
                 resultsSection.style.display = 'block';
             }
-         
+        } catch (err) {
+            alert('Request failed: ' + err.message);
+        } finally {
+            generateBtn.disabled = false;
+            loadingState.style.display = 'none';
+        }
+    }
+
     function copyTable() {
         const table = document.querySelector('#table-container table');
         if (!table) {
