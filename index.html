@@ -320,61 +320,61 @@
     }
 
     async function copyTable() {
-        const table = document.querySelector('#table-container table');
-        if (!table) {
+        const tableContainer = document.getElementById('table-container');
+        if (!tableContainer || !tableContainer.querySelector('table')) {
             alert('No table found to copy.');
             return;
         }
 
-        let tsv = '';
-        
-        // Loop through every row and cell to build a strict Tab-Separated payload
-        for (let i = 0; i < table.rows.length; i++) {
-            let row = table.rows[i];
-            let rowData = [];
-            
-            for (let j = 0; j < row.cells.length; j++) {
-                // Clone the cell so we can manipulate it without changing the screen
-                let cellClone = row.cells[j].cloneNode(true);
-                
-                // Swap HTML breaks for real newlines inside the clone
-                const brs = cellClone.querySelectorAll('br');
-                for (let br of brs) {
-                    br.replaceWith('\n');
-                }
-                
-                // Use textContent to completely ignore screen word-wrapping
-                let cellText = cellClone.textContent || ""; 
-                
-                // Excel rules: Escape existing quotes by doubling them
-                cellText = cellText.replace(/"/g, '""'); 
-                
-                // Excel rules: Wrap the entire cell in quotes so line breaks stay inside the cell
-                cellText = `"${cellText}"`; 
-                
-                rowData.push(cellText);
-            }
-            // Join columns with a Tab, and rows with a Newline
-            tsv += rowData.join('\t') + '\n'; 
-        }
+        // 1. Grab the raw HTML exactly as it is on the screen
+        let rawHtml = tableContainer.innerHTML;
+
+        // 2. Force Excel to keep breaks in the same cell using the Microsoft tag
+        let excelHtml = rawHtml.replace(/<br\s*\/?>/gi, '<br style="mso-data-placement:same-cell;">');
+
+        // 3. Wrap it in a proper Microsoft Office HTML envelope
+        let fullHtml = `
+            <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+            <head>
+                <meta charset="utf-8">
+                <style>
+                    /* Double redundancy to force Excel to keep paragraphs inside the cell */
+                    br { mso-data-placement: same-cell; }
+                    td { white-space: normal; vertical-align: top; }
+                </style>
+            </head>
+            <body>
+                ${excelHtml}
+            </body>
+            </html>
+        `;
 
         try {
-            // Modern way to push raw data to the clipboard
-            await navigator.clipboard.writeText(tsv);
-            alert('Row copied! Open Excel or Google Sheets and press Ctrl+V.');
+            // 4. Write directly to the system clipboard, bypassing browser sanitizers
+            const blobHtml = new Blob([fullHtml], { type: "text/html" });
+            const blobText = new Blob([tableContainer.innerText], { type: "text/plain" });
+
+            const clipboardItem = new ClipboardItem({
+                "text/html": blobHtml,
+                "text/plain": blobText
+            });
+
+            await navigator.clipboard.write([clipboardItem]);
+            alert('Row copied! Open Excel and press Ctrl+V.');
         } catch (err) {
-            // Fallback for older browsers
-            const textArea = document.createElement("textarea");
-            textArea.value = tsv;
-            document.body.appendChild(textArea);
-            textArea.select();
+            console.error("Clipboard API failed, falling back to old method...", err);
+            // Emergency fallback for older browsers
+            const range = document.createRange();
+            range.selectNode(tableContainer.querySelector('table'));
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
             try {
                 document.execCommand('copy');
-                alert('Row copied! Open Excel or Google Sheets and press Ctrl+V.');
+                alert('Row copied! Open Excel and press Ctrl+V.');
             } catch (ex) {
                 alert('Copy failed. Please manually select the table rows and copy.');
             }
-            document.body.removeChild(textArea);
+            window.getSelection().removeAllRanges();
         }
     }
 </script>
