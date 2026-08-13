@@ -293,24 +293,25 @@
 
             if (data.error) {
                 alert('API Error: ' + data.error);
-            } else {
-                // Print the raw data to the browser console so we can see the exact formatting
-                console.log("RAW AGENT DATA:", data);
+           } else {
+                let rawText = data.output || data.text || data || "";
                 
-                let rawText = data.output || "";
-                let cleanOutput = String(rawText).replace(/\[BR\]/gi, '<br><br>');
-                
+                // 1. Catch [BR], escaped HTML breaks, and literal newlines
+                let cleanOutput = String(rawText)
+                    .replace(/\[BR\]/gi, '<br><br>')
+                    .replace(/&lt;br\/?&gt;/gi, '<br>')
+                    .replace(/\\n/g, '<br>')
+                    .replace(/\n/g, '<br>');
+
+                // 2. Chop off the weird 'thought_signature' python data at the end
+                if (cleanOutput.includes("</table>")) {
+                    cleanOutput = cleanOutput.substring(0, cleanOutput.indexOf("</table>") + 8);
+                }
+
                 tableContainer.innerHTML = cleanOutput;
                 resultsSection.style.display = 'block';
             }
-        } catch (err) {
-            alert('Request failed: ' + err.message);
-        } finally {
-            generateBtn.disabled = false;
-            loadingState.style.display = 'none';
-        }
-    }
-
+         
     function copyTable() {
         const table = document.querySelector('#table-container table');
         if (!table) {
