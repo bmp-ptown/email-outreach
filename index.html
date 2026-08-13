@@ -296,17 +296,14 @@
             } else {
                 let rawText = data.output || data.text || data || "";
                 
-                // THE FIX: Use Microsoft's special CSS tag to force line breaks to stay inside the cell
-                const excelBreak = '<br style="mso-data-placement:same-cell;">';
-                
-                // Catch [BR], escaped HTML breaks, and literal newlines, replacing them with the Excel-safe break
+                // 1. Catch [BR], escaped HTML breaks, and literal newlines -> normal web line breaks
                 let cleanOutput = String(rawText)
-                    .replace(/\[BR\]/gi, excelBreak + excelBreak)
-                    .replace(/&lt;br\/?&gt;/gi, excelBreak)
-                    .replace(/\\n/g, excelBreak)
-                    .replace(/\n/g, excelBreak);
+                    .replace(/\[BR\]/gi, '<br><br>')
+                    .replace(/&lt;br\/?&gt;/gi, '<br>')
+                    .replace(/\\n/g, '<br>')
+                    .replace(/\n/g, '<br>');
 
-                // Chop off the weird 'thought_signature' python data at the end
+                // 2. Chop off the weird 'thought_signature' python data at the end
                 if (cleanOutput.includes("</table>")) {
                     cleanOutput = cleanOutput.substring(0, cleanOutput.indexOf("</table>") + 8);
                 }
@@ -322,25 +319,54 @@
         }
     }
 
-    function copyTable() {
+    async function copyTable() {
         const table = document.querySelector('#table-container table');
         if (!table) {
             alert('No table found to copy.');
             return;
         }
 
-        const range = document.createRange();
-        range.selectNode(table);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
+        let tsv = '';
+        
+        // Loop through every row and cell to build a strict Tab-Separated payload
+        for (let i = 0; i < table.rows.length; i++) {
+            let row = table.rows[i];
+            let rowData = [];
+            
+            for (let j = 0; j < row.cells.length; j++) {
+                // .innerText preserves the visual line breaks as standard \n characters
+                let cellText = row.cells[j].innerText; 
+                
+                // Excel rules: Escape existing quotes by doubling them
+                cellText = cellText.replace(/"/g, '""'); 
+                
+                // Excel rules: Wrap the entire cell in quotes so line breaks stay inside the cell
+                cellText = `"${cellText}"`; 
+                
+                rowData.push(cellText);
+            }
+            // Join columns with a Tab, and rows with a Newline
+            tsv += rowData.join('\t') + '\n'; 
+        }
 
         try {
-            document.execCommand('copy');
+            // Modern way to push raw data to the clipboard
+            await navigator.clipboard.writeText(tsv);
             alert('Row copied! Open Excel or Google Sheets and press Ctrl+V.');
         } catch (err) {
-            alert('Copy failed. Please manually select the table rows and copy.');
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = tsv;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Row copied! Open Excel or Google Sheets and press Ctrl+V.');
+            } catch (ex) {
+                alert('Copy failed. Please manually select the table rows and copy.');
+            }
+            document.body.removeChild(textArea);
         }
-        window.getSelection().removeAllRanges();
     }
 </script>
 </body>
